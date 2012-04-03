@@ -5,7 +5,7 @@ require "cassandra"
 include SimpleUUID
 
 DEFAULT_KEYSPACE = "QueueInfo"
-DEFAULT_SERVERS = ["127.0.0.1:9160"]
+DEFAULT_SERVERS  = ["127.0.0.1:9160"]
 DEFAULT_QUEUE_CF = :Queue
 
 module CassandraQueue
@@ -15,16 +15,15 @@ module CassandraQueue
       @queues ||= {}
     end
 
-    def self.queue(qid, keyspace, servers)
-      key = :"#{qid}_#{keyspace}_#{servers.join(',')}"
-      queues[key] ||= Queue.new(qid, keyspace, servers)
+    def self.queue(qid)
+      queues[qid.to_sym] ||= Queue.new(qid)
     end
   end
 
   class Queue
     # Entry point for using a queue.  Class method which will return you a queue object for that UUID
-    def self.get_queue(qid, keyspace = DEFAULT_KEYSPACE, servers = DEFAULT_SERVERS)
-      QueueManager.queue(qid, keyspace, servers)
+    def self.get_queue(qid)
+      QueueManager.queue(qid)
     end
 
     def initialize(qid, keyspace, servers)
@@ -33,7 +32,7 @@ module CassandraQueue
 
       @key = qid_to_rowkey qid
       # Set cassandra client if it has not already been set
-      @client ||= create_client(keyspace, servers)
+      @client ||= create_client(keyspace)
       @queue_cf = DEFAULT_QUEUE_CF
     end
 
@@ -41,7 +40,7 @@ module CassandraQueue
       qid
     end
 
-    def create_client(keyspace, servers)
+    def create_client(keyspace, servers = DEFAULT_SERVERS)
       ::Cassandra.new(keyspace, servers.flatten)
     end
 
@@ -61,5 +60,8 @@ module CassandraQueue
     def list_queue
       @client.get(@queue_cf, @key)
     end
+
+    # Show the first (oldest) element in the queue
+      @client.get(@queue_cf, @key, :count => 1)
   end
 end
