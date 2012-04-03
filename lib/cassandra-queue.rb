@@ -4,7 +4,7 @@
 require "cassandra"
 include SimpleUUID
 
-DEFAULT_KEYSPACE = "QueueInfo"
+DEFAULT_KEYSPACE = "CassandraQueueInfo"
 DEFAULT_SERVERS  = ["127.0.0.1:9160"]
 DEFAULT_QUEUE_CF = :Queue
 
@@ -15,15 +15,16 @@ module CassandraQueue
       @queues ||= {}
     end
 
-    def self.queue(qid)
-      queues[qid.to_sym] ||= Queue.new(qid)
+    def self.queue(qid, servers)
+      key = :"#{qid}_#{servers.flatten.join(',')}"
+      queues[key] ||= Queue.new(qid, servers)
     end
   end
 
   class Queue
     # Entry point for using a queue.  Class method which will return you a queue object for that UUID
-    def self.get_queue(qid)
-      QueueManager.queue(qid)
+    def self.get_queue(qid, servers = DEFAULT_SERVERS)
+      QueueManager.queue(qid, servers)
     end
 
     # Takes a payload, throws it on the queue, and returns the TimeUUID that was created for it
@@ -67,7 +68,7 @@ module CassandraQueue
       qid
     end
 
-    def create_client(keyspace, servers = DEFAULT_SERVERS)
+    def create_client(keyspace, servers)
       ::Cassandra.new(keyspace, servers.flatten)
     end
   end
