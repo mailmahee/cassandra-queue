@@ -45,24 +45,26 @@ module CassandraQueue
     end
 
     # Takes a payload, throws it on the queue, and returns the TimeUUID that was created for it
-    def insert(payload, time=Time.now)
+    def insert(payload, time = Time.now, options = {})
       timeUUID = UUID.new(time)
-      @client.insert(@queue_cf, @key, timeUUID => payload)
+      @client.insert(@queue_cf, @key, timeUUID => payload, options)
       timeUUID
     end
 
     # Removes a TimeUUID, and it's message, from the queue
-    def delete(timeUUID)
-      @client.remove(@queue_cf, @key, timeUUID)
+    def delete(timeUUID, options = {})
+      @client.remove(@queue_cf, @key, timeUUID, options)
     end
 
-    # Show the current state of the queue, for things such as failure recovery
-    def list_queue
-      @client.get(@queue_cf, @key)
+    # Show the first 100 elements of the queue by default, for things such as failure recovery
+    def list_queue(options = {})
+      @client.get(@queue_cf, @key, options)
     end
 
     # Show the first (oldest) element in the queue
     # Returns [TimeUUID, payload] as a two element array
-      @client.get(@queue_cf, @key, :count => 1).first
+    def peek(options = {})
+      options.merge(:count => 1)
+      @client.get(@queue_cf, @key, options).first
   end
 end
