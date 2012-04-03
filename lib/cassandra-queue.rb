@@ -59,7 +59,7 @@ module CassandraQueue
 
     # Show the current state of the queue, for things such as failure recovery
     def list_queue
-
+      @client.get(@queue_cf, @key)
     end
   end
 end
