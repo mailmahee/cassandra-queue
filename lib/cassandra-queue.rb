@@ -26,24 +26,6 @@ module CassandraQueue
       QueueManager.queue(qid)
     end
 
-    def initialize(qid, keyspace, servers)
-      # Fail if called directly.  We want queues to be managed by QueueManager
-      raise "Please create a managed queue using Queue::get_queue" unless caller[1] =~ /in `queue'/
-
-      @key = qid_to_rowkey qid
-      # Set cassandra client if it has not already been set
-      @client ||= create_client(keyspace)
-      @queue_cf = DEFAULT_QUEUE_CF
-    end
-
-    def qid_to_rowkey(qid)
-      qid
-    end
-
-    def create_client(keyspace, servers = DEFAULT_SERVERS)
-      ::Cassandra.new(keyspace, servers.flatten)
-    end
-
     # Takes a payload, throws it on the queue, and returns the TimeUUID that was created for it
     def insert(payload, time = Time.now, options = {})
       timeUUID = UUID.new(time)
@@ -66,5 +48,24 @@ module CassandraQueue
     def peek(options = {})
       options.merge(:count => 1)
       @client.get(@queue_cf, @key, options).first
-  end
+    end
+
+    private
+    def initialize(qid, keyspace, servers)
+      # Fail if called directly.  We want queues to be managed by QueueManager
+      raise "Please create a managed queue using Queue::get_queue" unless caller[1] =~ /in `queue'/
+
+      @key = qid_to_rowkey qid
+      # Set cassandra client if it has not already been set
+      @client ||= create_client(keyspace)
+      @queue_cf = DEFAULT_QUEUE_CF
+    end
+
+    def qid_to_rowkey(qid)
+      qid
+    end
+
+    def create_client(keyspace, servers = DEFAULT_SERVERS)
+      ::Cassandra.new(keyspace, servers.flatten)
+    end
 end
