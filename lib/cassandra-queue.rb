@@ -29,7 +29,7 @@ module CassandraQueue
     # Takes a payload, throws it on the queue, and returns the TimeUUID that was created for it
     def insert(payload, time = Time.now, options = {})
       timeUUID = UUID.new(time)
-      @client.insert(@queue_cf, @key, timeUUID => payload, options)
+      @client.insert(@queue_cf, @key, { timeUUID => payload }, options)
       timeUUID
     end
 
@@ -49,6 +49,8 @@ module CassandraQueue
       options.merge(:count => 1)
       @client.get(@queue_cf, @key, options).first
     end
+    alias :first :peek
+    alias :front :peek
 
     private
     def initialize(qid, keyspace, servers)
@@ -68,4 +70,5 @@ module CassandraQueue
     def create_client(keyspace, servers = DEFAULT_SERVERS)
       ::Cassandra.new(keyspace, servers.flatten)
     end
+  end
 end
