@@ -62,6 +62,7 @@ module CassandraQueue
     end
 
     # Show the first (oldest) element in the queue
-      @client.get(@queue_cf, @key, :count => 1)
+    # Returns [TimeUUID, payload] as a two element array
+      @client.get(@queue_cf, @key, :count => 1).first
   end
 end
