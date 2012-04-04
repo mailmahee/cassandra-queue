@@ -63,8 +63,8 @@ module CassandraQueue
       @client.get(@queue_cf, @key, options).first
     end
 
-    alias :front    :peek
-    alias :get_next :peek
+    alias :front      :peek
+    alias :get_first  :peek
 
     private
     def initialize(qid, keyspace, servers)
