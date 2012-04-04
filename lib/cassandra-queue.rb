@@ -38,10 +38,16 @@ module CassandraQueue
       timeUUID
     end
 
-    # Removes a TimeUUID, and it's message, from the queue
-    def delete(timeUUID, options = {})
+    alias :add      :insert
+    alias :enqueue  :insert
+    alias :push     :insert
+
+    # Removes a TimeUUID, and it's payload, from the queue
+    def remove(timeUUID, options = {})
       @client.remove(@queue_cf, @key, timeUUID, options)
     end
+
+    alias :delete :remove
 
     # Show the first 100 elements of the queue by default, for things such as failure recovery
     def list(options = {})
@@ -51,12 +57,12 @@ module CassandraQueue
     alias :list_queue :list
     alias :queue      :list
 
-    def messages(options = {})
+    def payloads(options = {})
       list(options).values
     end
 
-    alias :payloads :messages
-    alias :values   :messages
+    alias :messages :payloads
+    alias :values   :payloads
 
     def empty?(options = {})
       list(options).empty?
@@ -64,13 +70,23 @@ module CassandraQueue
 
     # Show the first (oldest) element in the queue
     # Returns [TimeUUID, payload] as a two element array
-    def peek(options = {})
+    def peek(payload_only = true, options = {})
       options.merge(:count => 1)
-      @client.get(@queue_cf, @key, options).first
+      payload = @client.get(@queue_cf, @key, options).first
+      payload && payload_only ? payload.last : payload
     end
 
     alias :front      :peek
     alias :get_first  :peek
+
+    def pop(options)
+      item = peek(false, options)
+      return nil if item.nil?
+      remove(item.first, options)
+      item.last
+    end
+
+    alias :dequeue  :pop
 
     private
     def initialize(qid, keyspace, servers)
