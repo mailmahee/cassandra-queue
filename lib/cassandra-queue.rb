@@ -50,7 +50,13 @@ module CassandraQueue
 
     alias :list_queue :list
     alias :queue      :list
-    alias :messages   :list
+
+    def messages(options = {})
+      list(options).values
+    end
+
+    alias :payloads :messages
+    alias :values   :messages
 
     def empty?(options = {})
       list(options).empty?
