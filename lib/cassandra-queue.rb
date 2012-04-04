@@ -39,8 +39,12 @@ module CassandraQueue
     end
 
     alias :add      :insert
-    alias :enqueue  :insert
-    alias :push     :insert
+
+    def push(payload, options = {})
+      insert(payload, Time.now, options)
+    end
+
+    alias :enqueue  :push
 
     # Removes a TimeUUID, and it's payload, from the queue
     def remove(timeUUID, options = {})
