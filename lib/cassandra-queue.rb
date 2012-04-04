@@ -44,12 +44,16 @@ module CassandraQueue
     end
 
     # Show the first 100 elements of the queue by default, for things such as failure recovery
-    def list_queue(options = {})
+    def list(options = {})
       @client.get(@queue_cf, @key, options)
     end
 
+    alias :list_queue :list
+    alias :queue      :list
+    alias :messages   :list
+
     def empty?(options = {})
-      list_queue(options).empty?
+      list(options).empty?
     end
 
     # Show the first (oldest) element in the queue
