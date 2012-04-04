@@ -63,7 +63,6 @@ module CassandraQueue
       @client.get(@queue_cf, @key, options).first
     end
 
-    alias :first    :peek
     alias :front    :peek
     alias :get_next :peek
 
