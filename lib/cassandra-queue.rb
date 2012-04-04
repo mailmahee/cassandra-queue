@@ -15,18 +15,22 @@ module CassandraQueue
       @queues ||= {}
     end
 
-    def self.queue(qid, servers)
-      key = :"#{qid}_#{servers.flatten.join(',')}"
-      queues[key] ||= Queue.new(qid, servers)
+    def self.queue(qid, keyspace, servers)
+      key = :"#{qid}_#{keyspace}_#{servers.flatten.join(',')}"
+      queues[key] ||= Queue.new(qid, keyspace, servers)
     end
   end
 
   class Queue
     # Entry point for using a queue.  Class method which will return you a queue object for that UUID
-    def self.get_queue(qid, servers = DEFAULT_SERVERS)
-      QueueManager.queue(qid, servers)
+    def self.retrieve(qid, keyspace = DEFAULT_KEYSPACE, servers = DEFAULT_SERVERS)
+      QueueManager.queue(qid, keyspace, servers)
     end
 
+    class << self
+      alias :get_queue  :retrieve
+      alias :get        :retrieve
+    end
     # Takes a payload, throws it on the queue, and returns the TimeUUID that was created for it
     def insert(payload, time = Time.now, options = {})
       timeUUID = UUID.new(time)
@@ -44,14 +48,20 @@ module CassandraQueue
       @client.get(@queue_cf, @key, options)
     end
 
+    def empty?(options = {})
+      list_queue(options).empty?
+    end
+
     # Show the first (oldest) element in the queue
     # Returns [TimeUUID, payload] as a two element array
     def peek(options = {})
       options.merge(:count => 1)
       @client.get(@queue_cf, @key, options).first
     end
-    alias :first :peek
-    alias :front :peek
+
+    alias :first    :peek
+    alias :front    :peek
+    alias :get_next :peek
 
     private
     def initialize(qid, keyspace, servers)
@@ -60,7 +70,7 @@ module CassandraQueue
 
       @key = qid_to_rowkey qid
       # Set cassandra client if it has not already been set
-      @client ||= create_client(keyspace)
+      @client ||= create_client(keyspace, servers)
       @queue_cf = DEFAULT_QUEUE_CF
     end
 
