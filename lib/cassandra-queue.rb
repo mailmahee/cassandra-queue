@@ -50,40 +50,41 @@ module CassandraQueue
     alias :delete :remove
 
     # Show the first 100 elements of the queue by default, for things such as failure recovery
-    def list(options = {})
-      @client.get(@queue_cf, @key, options)
+    def list(get_times = false, options = {})
+      list = @client.get(@queue_cf, @key, options)
+      get_times ? list : list.values
     end
 
     alias :list_queue :list
     alias :queue      :list
 
     def payloads(options = {})
-      list(options).values
+      list(false, options)
     end
 
     alias :messages :payloads
     alias :values   :payloads
 
     def empty?(options = {})
-      list(options).empty?
+      list(true, options).empty?
     end
 
     # Show the first (oldest) element in the queue
-    # Returns [TimeUUID, payload] as a two element array
-    def peek(payload_only = true, options = {})
+    # Returns payload [TimeUUID, payload] as a two element array
+    def peek(get_time = false, options = {})
       options.merge(:count => 1)
       payload = @client.get(@queue_cf, @key, options).first
-      payload && payload_only ? payload.last : payload
+      payload && !get_time ? payload.last : payload
     end
 
     alias :front      :peek
     alias :get_first  :peek
 
-    def pop(options)
-      item = peek(false, options)
+    def pop(get_time = false, options = {})
+      item = peek(true, options)
       return nil if item.nil?
       remove(item.first, options)
-      item.last
+      get_time ? item : item.last
     end
 
     alias :dequeue  :pop
