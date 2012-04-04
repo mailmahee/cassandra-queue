@@ -4,10 +4,10 @@
 require "cassandra"
 include SimpleUUID
 
-DEFAULT_KEYSPACE = "CassandraQueueInfo"
-DEFAULT_SERVERS  = ["127.0.0.1:9160"]
-DEFAULT_QUEUE_CF = :Queue
-
+DEFAULT_KEYSPACE      = "CassandraQueueInfo"
+DEFAULT_SERVERS       = ["127.0.0.1:9160"]
+DEFAULT_STRING_QUEUE  = :StringQueue
+DEFAULT_BYTES_QUEUE   = :BytesQueue
 module CassandraQueue
   # Singleton class that manages our cassandra queues
   class QueueManager
@@ -15,16 +15,16 @@ module CassandraQueue
       @queues ||= {}
     end
 
-    def self.queue(qid, keyspace, servers)
-      key = :"#{qid}_#{keyspace}_#{servers.flatten.join(',')}"
-      queues[key] ||= Queue.new(qid, keyspace, servers)
+    def self.queue(qid, string_queue, keyspace, servers)
+      key = :"#{qid}_#{string_queue}_#{keyspace}_#{servers.flatten.join(',')}"
+      queues[key] ||= Queue.new(qid, string_queue, keyspace, servers)
     end
   end
 
   class Queue
     # Entry point for using a queue.  Class method which will return you a queue object for that UUID
-    def self.retrieve(qid, keyspace = DEFAULT_KEYSPACE, servers = DEFAULT_SERVERS)
-      QueueManager.queue(qid, keyspace, servers)
+    def self.retrieve(qid, string_queue = true, keyspace = DEFAULT_KEYSPACE, servers = DEFAULT_SERVERS)
+      QueueManager.queue(qid, string_queue, keyspace, servers)
     end
 
     class << self
@@ -90,14 +90,14 @@ module CassandraQueue
     alias :dequeue  :pop
 
     private
-    def initialize(qid, keyspace, servers)
+    def initialize(qid, string_queue, keyspace, servers)
       # Fail if called directly.  We want queues to be managed by QueueManager
       raise "Please create a managed queue using Queue::get_queue" unless caller[1] =~ /in `queue'/
 
       @key = qid_to_rowkey qid
       # Set cassandra client if it has not already been set
       @client ||= create_client(keyspace, servers)
-      @queue_cf = DEFAULT_QUEUE_CF
+      @queue_cf = string_queue ? DEFAULT_STRING_QUEUE : DEFAULT_BYTES_QUEUE
     end
 
     def qid_to_rowkey(qid)
