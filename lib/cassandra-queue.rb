@@ -93,11 +93,10 @@ module CassandraQueue
 
     alias :dequeue  :pop
 
+    private_class_method :new
+
     private
     def initialize(qid, string_queue, keyspace, servers)
-      # Fail if called directly.  We want queues to be managed by QueueManager
-      raise "Please create a managed queue using Queue::get_queue" unless caller[1] =~ /in `queue'/
-
       @key = qid_to_rowkey qid
       # Set cassandra client if it has not already been set
       @client = create_client(keyspace, servers)
