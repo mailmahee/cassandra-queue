@@ -100,7 +100,7 @@ module CassandraQueue
 
       @key = qid_to_rowkey qid
       # Set cassandra client if it has not already been set
-      @client ||= create_client(keyspace, servers)
+      @client = create_client(keyspace, servers)
       @queue_cf = string_queue ? DEFAULT_STRING_QUEUE : DEFAULT_BYTES_QUEUE
     end
 
@@ -109,7 +109,7 @@ module CassandraQueue
     end
 
     def create_client(keyspace, servers)
-      ::Cassandra.new(keyspace, servers.flatten)
+      ::Cassandra.new(keyspace, [servers].flatten)
     end
   end
 end
