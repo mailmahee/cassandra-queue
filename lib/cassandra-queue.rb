@@ -23,7 +23,10 @@ module CassandraQueue
 
   class Queue
     # Entry point for using a queue.  Class method which will return you a queue object for that UUID
-    def self.retrieve(qid, string_queue = true, keyspace = DEFAULT_KEYSPACE, servers = DEFAULT_SERVERS)
+    def self.retrieve(qid, opts = {})
+      string_queue = opts[:string_queue] || false
+      keyspace = opts[:keyspace] || DEFAULT_KEYSPACE
+      servers = opts[:servers] || DEFAULT_SERVERS
       QueueManager.queue(qid, string_queue, keyspace, servers)
     end
 
