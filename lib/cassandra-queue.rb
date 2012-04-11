@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# queue = CassandraQueue::Queue.get_queue("myqueue", "KeyspaceName", "localhost:9160")
+# queue = CassandraQueue::Queue.get_queue("myqueue", :keyspace => "KeyspaceName", :servers => "localhost:9160")
 
 require "cassandra"
 include SimpleUUID
@@ -17,7 +17,7 @@ module CassandraQueue
 
     def self.queue(qid, string_queue, keyspace, servers)
       key = :"#{qid}_#{string_queue}_#{keyspace}_#{servers.flatten.join(',')}"
-      queues[key] ||= Queue.new(qid, string_queue, keyspace, servers)
+      queues[key] ||= Queue.send(:new, qid, string_queue, keyspace, servers)
     end
   end
 
