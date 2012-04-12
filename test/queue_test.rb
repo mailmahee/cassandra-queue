@@ -17,5 +17,10 @@ class QueueTest < Scope::TestCase
       @cassandra.expects(:insert).with(@cf, @qid, {@tid => @message}, {})
       @queue.push(@message)
     end
+
+    should "remove from cassandra when asked to" do
+      @cassandra.expects(:remove).with(@cf, @qid, @tid, {})
+      @queue.remove(@tid)
+    end
   end
 end
