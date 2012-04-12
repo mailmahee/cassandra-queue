@@ -27,7 +27,7 @@ EOS
 
   s.add_dependency "cassandra"
 
-  s.add_development_dependency "bundler", "~> 1.0.10"
+  s.add_development_dependency "bundler", "~> 1.1"
   s.add_development_dependency "scope", "~> 0.2.1"
   s.add_development_dependency "mocha"
   s.add_development_dependency "rake"
