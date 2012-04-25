@@ -8,6 +8,7 @@ DEFAULT_KEYSPACE      = "CassandraQueueInfo"
 DEFAULT_SERVERS       = ["127.0.0.1:9160"]
 DEFAULT_STRING_QUEUE  = :StringQueue
 DEFAULT_BYTES_QUEUE   = :BytesQueue
+# Note(jbhat): Since almost all column names will be different, compression doesn't help for these CFs
 module CassandraQueue
   # Singleton class that manages our cassandra queues
   class QueueManager
